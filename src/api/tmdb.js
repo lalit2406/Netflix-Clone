@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_KEY = "602daa96c97e7e182265a0ff657dcdd2"; // 🔴 paste your TMDB key
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 
 // 🔥 Trending
