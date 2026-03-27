@@ -1,0 +1,143 @@
+/* ================= BANNER ================= */
+.detail-banner {
+  height: 80vh;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.detail-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.4));
+}
+
+.banner-content {
+  position: absolute;
+  bottom: 60px;
+  left: 50px;
+  max-width: 600px;
+}
+
+/* ================= SECTION ================= */
+.section {
+  padding: 20px 50px; /* reduced spacing */
+}
+
+/* ================= CAST ================= */
+.cast-list {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+}
+
+.cast-card {
+  text-align: center;
+}
+
+.cast-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+/* ================= VIDEO ================= */
+.video-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-overlay iframe {
+  width: 80%;
+  height: 70%;
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 30px;
+  color: white;
+  cursor: pointer;
+}
+
+/* make rows tighter in detail page */
+.row {
+  margin-top: 15px;
+}
+
+.section {
+  padding: 20px 50px 10px 50px; /* reduce bottom gap */
+}
+
+/* ================= LOADING PAGE ================= */
+.detail-loading {
+  padding: 20px;
+}
+
+/* banner */
+.banner-skeleton {
+  width: 100%;
+  height: 80vh;
+  border-radius: 8px;
+  background: #2a2a2a;
+}
+
+/* titles */
+.title-skeleton {
+  width: 200px;
+  height: 25px;
+  margin: 20px 0;
+  border-radius: 4px;
+  background: #2a2a2a;
+}
+
+/* cast */
+.cast-img-skeleton {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #2a2a2a;
+}
+
+.cast-text-skeleton {
+  width: 60px;
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: #2a2a2a;
+}
+
+/* ================= SHIMMER ================= */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150px;
+  width: 100px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.15),
+    transparent
+  );
+  animation: shimmerMove 1.2s infinite;
+}
+
+@keyframes shimmerMove {
+  100% {
+    left: 100%;
+  }
+}

@@ -1,0 +1,56 @@
+/* ================= LOGIN PAGE ================= */
+.login {
+  height: 100vh;
+  background-image: url("https://assets.nflxext.com/ffe/siteui/vlv3/7ea4545e-42d3-4ebf-82fd-0e1984dc6375/web/IN-en-20260316-TRIFECTA-perspective_789c5633-3949-4708-8e6c-8ddfd22ed696_medium.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* DARK OVERLAY */
+.login::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.login-box {
+  position: relative;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 40px;
+  border-radius: 8px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-box h1 {
+  margin-bottom: 20px;
+}
+
+.login-box input {
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 4px;
+}
+
+.login-box button {
+  padding: 12px;
+  background: #e50914;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.login-box button:hover {
+  background: #f6121d;
+}
