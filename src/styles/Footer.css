@@ -1,0 +1,173 @@
+/* ================= PREMIUM NETFLIX FOOTER ================= */
+
+.netflix-footer {
+  background-color: var(--bg-dark);
+  color: var(--text-muted);
+  padding: 60px 0 40px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: inherit;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.footer-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding-inline: clamp(1.2rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+
+.footer-contact {
+  font-size: 15px;
+  margin: 0 0 30px 0;
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.footer-contact a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer-contact a:hover {
+  text-decoration: underline;
+  color: var(--text-light);
+}
+
+/* 3 columns layout for links */
+.footer-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  margin-bottom: 35px;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.footer-link {
+  color: var(--text-muted);
+  font-size: clamp(0.82rem, 1vw, 0.92rem);
+  text-decoration: none;
+  transition: color 0.2s;
+  width: fit-content;
+}
+
+.footer-link:hover {
+  color: var(--text-light);
+  text-decoration: underline;
+}
+
+.footer-link:focus-visible {
+  outline: 2px solid var(--accent-red);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* Portfolio social links */
+.footer-socials {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 20px;
+}
+
+.footer-social-link {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-social-link:hover {
+  color: var(--text-light);
+  text-decoration: underline;
+}
+
+.footer-social-link:focus-visible {
+  outline: 2px solid var(--accent-red);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* Footer bottom details */
+.footer-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 25px;
+  text-align: left;
+}
+
+.footer-logo {
+  color: var(--accent-red);
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.footer-tech {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.footer-copyright {
+  font-size: 11px;
+  color: #555;
+  margin: 0;
+}
+
+.footer-disclaimer {
+  margin: 4px 0 0 0;
+}
+
+/* ================= RESPONSIVE ADJUSTMENTS ================= */
+
+/* Tablet viewports (768px - 1023px) */
+@media (max-width: 1023px) {
+  .footer-links {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+/* Mobile viewports (320px - 767px) */
+@media (max-width: 767px) {
+  .netflix-footer {
+    padding: 40px 0 30px 0;
+  }
+
+  .footer-links {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 25px;
+  }
+
+  .footer-link {
+    font-size: 0.85rem;
+  }
+
+  .footer-socials {
+    gap: 15px;
+  }
+}
+
+/* Very narrow viewports (down to 320px) */
+@media (max-width: 400px) {
+  .footer-links {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}

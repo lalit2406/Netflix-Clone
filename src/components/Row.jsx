@@ -1,71 +1,150 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import MovieCard from "./MovieCard";
+import ErrorDisplay from "./ErrorDisplay";
+import { CardSkeleton } from "./LoadingSkeleton";
 
-const Row = ({ title, fetchData }) => {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ NEW
+const Row = ({ title, fetchData, movies: initialMovies, onTrailerPlay }) => {
+  const [movies, setMovies] = useState(initialMovies || []);
+  const [loading, setLoading] = useState(!initialMovies);
+  const [error, setError] = useState("");
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
   const rowRef = useRef();
-  const navigate = useNavigate();
+
+  const fetchDataRef = useRef(fetchData);
 
   useEffect(() => {
-    const getData = async () => {
+    fetchDataRef.current = fetchData;
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (initialMovies) {
+      setMovies(initialMovies);
+      setLoading(false);
+      return;
+    }
+
+    const load = async () => {
       try {
-        const res = await fetchData();
-        setMovies(res.data.results || []);
-      } catch (error) {
-        console.error(error);
+        setLoading(true);
+        setError("");
+        if (fetchDataRef.current) {
+          const data = await fetchDataRef.current();
+          setMovies(data);
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Failed to load rows data.");
       } finally {
-        setLoading(false); // ✅ stop loading
+        setLoading(false);
       }
     };
 
-    getData();
-  }, [fetchData]);
+    load();
+  }, [initialMovies]);
 
-  const scroll = (dir) => {
-    rowRef.current.scrollBy({
-      left: dir === "left" ? -600 : 600,
-      behavior: "smooth",
-    });
+  // Handle arrow displays based on scroll position limits
+  const updateArrows = () => {
+    if (rowRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = rowRef.current;
+      setShowLeftArrow(scrollLeft > 10);
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 10);
+    }
   };
+
+  useEffect(() => {
+    const el = rowRef.current;
+    if (el) {
+      el.addEventListener("scroll", updateArrows);
+      
+      // Run updates after components lay out
+      const t = setTimeout(updateArrows, 400);
+      return () => {
+        el.removeEventListener("scroll", updateArrows);
+        clearTimeout(t);
+      };
+    }
+  }, [movies, loading]);
+
+  const handleScroll = (direction) => {
+    if (rowRef.current) {
+      const containerWidth = rowRef.current.clientWidth;
+      const scrollAmount = direction === "left" ? -containerWidth * 0.75 : containerWidth * 0.75;
+      rowRef.current.scrollBy({
+         left: scrollAmount,
+         behavior: "smooth"
+      });
+    }
+  };
+
+  const handleRetry = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      if (fetchDataRef.current) {
+        const data = await fetchDataRef.current();
+        setMovies(data);
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load rows data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="row">
+        <h2>{title}</h2>
+        <div style={{ display: "flex", gap: "20px", overflow: "hidden", padding: "15px 0" }}>
+          {Array(6).fill().map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="row">
+        <h2>{title}</h2>
+        <ErrorDisplay message={error} onRetry={initialMovies ? null : handleRetry} />
+      </div>
+    );
+  }
+
+  if (movies.length === 0) return null;
 
   return (
     <div className="row">
       <h2>{title}</h2>
-
       <div className="row-wrapper">
-        <button className="arrow left" onClick={() => scroll("left")}>
+        <button 
+          className={`arrow left ${!showLeftArrow ? "disabled" : ""}`} 
+          onClick={() => handleScroll("left")}
+          aria-label="Scroll left"
+          disabled={!showLeftArrow}
+        >
           ❮
         </button>
 
         <div className="row-posters" ref={rowRef}>
-          {loading
-            ? Array(8)
-                .fill()
-                .map((_, i) => (
-                  <div key={i} className="card skeleton"></div>
-                ))
-            : movies.map((movie) => (
-                <div
-                  key={movie.id}
-                  className="card"
-                  onClick={() => navigate(`/movie/${movie.id}`)}
-                >
-                  <img
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                    alt={movie.title}
-                    className="card-img"
-                  />
-
-                  <div className="card-overlay">
-                    <h3>{movie.title}</h3>
-                    <p>{movie.release_date}</p>
-                  </div>
-                </div>
-              ))}
+          {movies.map((movie) => (
+            <MovieCard 
+              key={movie.id} 
+              movie={movie} 
+              onTrailerPlay={onTrailerPlay} 
+            />
+          ))}
         </div>
 
-        <button className="arrow right" onClick={() => scroll("right")}>
+        <button 
+          className={`arrow right ${!showRightArrow ? "disabled" : ""}`} 
+          onClick={() => handleScroll("right")}
+          aria-label="Scroll right"
+          disabled={!showRightArrow}
+        >
           ❯
         </button>
       </div>

@@ -1,24 +1,31 @@
-import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Landing from "./pages/Landing";
+import Browse from "./pages/Browse";
 import Login from "./pages/Login";
 import MovieDetail from "./pages/MovieDetail";
+import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./styles/Global.css";
+
+const RootRoute = () => {
+  const user = localStorage.getItem("user");
+  return user ? <Navigate to="/browse" replace /> : <Landing />;
+};
+
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<RootRoute />} />
       <Route path="/login" element={<Login />} />
-
+      
       <Route
-        path="/"
+        path="/browse"
         element={
           <ProtectedRoute>
-            <Home />
+            <Browse />
           </ProtectedRoute>
         }
       />
-
-      
 
       <Route
         path="/movie/:id"
@@ -28,6 +35,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

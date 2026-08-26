@@ -1,14 +1,16 @@
 /* ================= LOGIN PAGE ================= */
 .login {
+  position: relative;
   height: 100vh;
   background-image: url("https://assets.nflxext.com/ffe/siteui/vlv3/7ea4545e-42d3-4ebf-82fd-0e1984dc6375/web/IN-en-20260316-TRIFECTA-perspective_789c5633-3949-4708-8e6c-8ddfd22ed696_medium.jpg");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  box-sizing: border-box;
 }
 
 /* DARK OVERLAY */
@@ -16,41 +18,112 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.5); /* slight details peaking through */
+  z-index: 1;
+}
+
+.login-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 25px 4%;
+  z-index: 10;
+}
+
+.login-header .logo {
+  color: var(--accent-red);
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin: 0;
+  cursor: pointer;
+  width: fit-content;
 }
 
 .login-box {
   position: relative;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.75);
-  padding: 40px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 60px 68px 40px;
   border-radius: 8px;
-  width: 300px;
+  width: 100%;
+  max-width: 450px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
 }
 
 .login-box h1 {
-  margin-bottom: 20px;
+  margin: 0 0 28px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-align: left;
 }
 
 .login-box input {
-  padding: 12px;
-  margin-bottom: 15px;
-  border: none;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
+  background-color: rgba(20, 20, 20, 0.8);
+  color: white;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.login-box input:focus {
+  border-color: var(--text-light);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
 
 .login-box button {
-  padding: 12px;
-  background: #e50914;
+  padding: 16px;
+  background: var(--accent-red);
   border: none;
   color: white;
   font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
   border-radius: 4px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  box-sizing: border-box;
 }
 
 .login-box button:hover {
   background: #f6121d;
+}
+
+.login-box button:active {
+  transform: scale(0.98);
+}
+
+.login-error {
+  color: var(--accent-red);
+  font-size: 14px;
+  margin-bottom: 20px;
+  background-color: rgba(229, 9, 20, 0.1);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 3px solid var(--accent-red);
+  text-align: left;
+}
+
+/* Responsive adjustment */
+@media (max-width: 480px) {
+  .login-header {
+    padding: 15px;
+  }
+  .login-header .logo {
+    font-size: 26px;
+  }
+  .login-box {
+    padding: 40px 30px;
+    max-width: 90%;
+  }
 }

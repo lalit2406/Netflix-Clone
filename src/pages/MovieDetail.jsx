@@ -1,167 +1,326 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
-  fetchMovieDetails,
-  fetchMovieVideos,
-  fetchMovieCredits,
-  fetchSimilarMovies,
-  fetchRecommendations,
-} from "../api/tmdb";
+  getMovieDetails,
+  getMovieTrailer,
+  getMovieCredits,
+  getSimilarMovies
+} from "../api/movies";
 
-import Row from "../components/Row"; // ✅ reuse Row
+import Row from "../components/Row";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import VideoModal from "../components/VideoModal";
+import moviePlaceholder from "../assets/movie-placeholder.svg";
+import avatarPlaceholder from "../assets/avatar-placeholder.svg";
 import "../styles/MovieDetail.css";
 
 const MovieDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
+  // Core details states
   const [movie, setMovie] = useState(null);
-  const [trailer, setTrailer] = useState(null);
+  const [trailerUrl, setTrailerUrl] = useState(null);
   const [cast, setCast] = useState([]);
-  const [showTrailer, setShowTrailer] = useState(false);
+  const [directors, setDirectors] = useState([]);
+  const [writers, setWriters] = useState([]);
+  const [similar, setSimilar] = useState([]);
 
+  // UI state managers
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [isInList, setIsInList] = useState(false);
+
+  // Sync My List state from LocalStorage on mount/id change
   useEffect(() => {
-    const getData = async () => {
+    const list = JSON.parse(localStorage.getItem("myList") || "[]");
+    setIsInList(list.includes(id));
+  }, [id]);
+
+  // Load detailed information on mount/id change
+  useEffect(() => {
+    const fetchMovieData = async () => {
       try {
-        const [detailRes, videoRes, creditRes] = await Promise.all([
-          fetchMovieDetails(id),
-          fetchMovieVideos(id),
-          fetchMovieCredits(id),
+        setLoading(true);
+        setError("");
+
+        // Run data fetches in parallel for efficiency
+        const [detailData, creditsData, similarData] = await Promise.all([
+          getMovieDetails(id),
+          getMovieCredits(id),
+          getSimilarMovies(id, 8)
         ]);
 
-        // 🎬 Movie
-        setMovie(detailRes.data);
+        setMovie(detailData);
+        setCast(creditsData.cast || []);
+        setDirectors(creditsData.directors || []);
+        setWriters(creditsData.writers || []);
+        setSimilar(similarData || []);
 
-        // 🎥 Trailer
-        const trailerVideo = videoRes.data.results.find(
-          (vid) => vid.type === "Trailer" && vid.site === "YouTube"
-        );
-        setTrailer(trailerVideo);
-
-        // 🎭 Cast
-        setCast(creditRes.data.cast.slice(0, 10));
+        // Load trailer separately so it doesn't block critical page details
+        try {
+          const trailerEmbed = await getMovieTrailer(id);
+          setTrailerUrl(trailerEmbed);
+        } catch (trailerErr) {
+          console.warn("Failed to retrieve movie trailer:", trailerErr);
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load details for movie ID:", id, err);
+        setError(err.message || "Failed to load movie details.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    getData();
+    fetchMovieData();
   }, [id]);
 
-  if (!movie) {
-  return (
-    <div className="detail-loading">
-      <div className="banner-skeleton shimmer"></div>
+  const handleToggleList = () => {
+    let list = JSON.parse(localStorage.getItem("myList") || "[]");
+    if (list.includes(id)) {
+      list = list.filter(item => item !== id);
+      setIsInList(false);
+    } else {
+      list.push(id);
+      setIsInList(true);
+    }
+    localStorage.setItem("myList", JSON.stringify(list));
+    // Dispatch event to keep other rows updated in real-time
+    window.dispatchEvent(new Event("myListUpdated"));
+  };
 
-      <div className="section">
-        <div className="title-skeleton shimmer"></div>
+  const handleTrailerPlay = async (m) => {
+    try {
+      setShowTrailer(true);
+      // If it's a similar movie card played, fetch its trailer URL on demand
+      if (m && m.id !== id) {
+        setTrailerUrl(null);
+        const url = await getMovieTrailer(m.id);
+        setTrailerUrl(url);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-        <div className="cast-list">
-          {Array(6)
-            .fill()
-            .map((_, i) => (
-              <div key={i} className="cast-card">
-                <div className="cast-img-skeleton shimmer"></div>
-                <div className="cast-text-skeleton shimmer"></div>
-              </div>
-            ))}
+  // Loading skeleton block
+  if (loading) {
+    return (
+      <div className="detail-page-loading">
+        <Navbar />
+        <div className="detail-loading">
+          <div className="banner-skeleton shimmer"></div>
+          <div className="section">
+            <div className="title-skeleton shimmer"></div>
+            <div className="cast-list">
+              {Array(6).fill().map((_, i) => (
+                <div key={i} className="cast-card">
+                  <div className="cast-img-skeleton shimmer"></div>
+                  <div className="cast-text-skeleton shimmer"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="row">
-        <div className="title-skeleton shimmer"></div>
-        <div className="row-posters">
-          {Array(6)
-            .fill()
-            .map((_, i) => (
-              <div key={i} className="card skeleton"></div>
-            ))}
+  // Error boundary page fallback
+  if (error || !movie) {
+    return (
+      <div className="detail-error-container">
+        <Navbar />
+        <div className="detail-error-box">
+          <h2 className="error-title">Error Loading Title</h2>
+          <p className="error-message">{error || "The movie details could not be found."}</p>
+          <button className="btn-error-return" onClick={() => navigate("/browse")}>
+            Return to Browse
+          </button>
         </div>
+        <Footer />
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
-    <div>
-      {/* 🔥 HERO BANNER */}
-      <div
-        className="detail-banner"
+    <div className="movie-detail-page">
+      <Navbar />
+
+      {/* Detail Navigation Bar */}
+      <div className="detail-navigation-bar" aria-label="Details Page Navigation">
+        <button 
+          className="btn-nav-back" 
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate("/browse");
+            }
+          }}
+          aria-label="Go back to previous page"
+        >
+          ← Back
+        </button>
+        <button 
+          className="btn-nav-home" 
+          onClick={() => navigate("/browse")}
+          aria-label="Go to browse home"
+        >
+          ⌂ Home
+        </button>
+      </div>
+
+      {/* 1. CINEMATIC DETAIL HERO BACKGROUND */}
+      <div 
+        className="detail-hero"
         style={{
-          backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
+          backgroundImage: `url(${movie.backdropUrl || "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=1200"})`
         }}
       >
-        <div className="banner-content">
-          <h1>{movie.title}</h1>
+        <div className="hero-gradient-overlay" />
+        
+        <div className="detail-hero-container">
+          {/* Double column: Left poster */}
+          <div className="detail-poster-column">
+            <img 
+              src={movie.posterUrl || moviePlaceholder} 
+              alt={movie.title}
+              className="detail-poster-img"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = moviePlaceholder;
+              }}
+            />
+          </div>
 
-          <p>⭐ {movie.vote_average}</p>
-          <p>📅 {movie.release_date}</p>
+          {/* Double column: Right metadata details */}
+          <div className="detail-content-column">
+            <h1 className="detail-title">{movie.title}</h1>
+            
+            <div className="detail-meta">
+              {movie.rating && movie.rating !== "N/A" && (
+                <span className="detail-badge-rating">IMDb {movie.rating}</span>
+              )}
+              <span>{movie.year}</span>
+              {movie.runtime && movie.runtime !== "N/A" && <span>{movie.runtime}</span>}
+            </div>
 
-          <p className="plot">{movie.overview}</p>
+            {movie.genres && movie.genres.length > 0 && (
+              <p className="detail-genres">
+                <strong>Genres: </strong>{movie.genres.join(", ")}
+              </p>
+            )}
 
-          <div className="btn-group">
-            <button
-              className="play-btn"
-              onClick={() => setShowTrailer(true)}
-            >
-              ▶ Play
-            </button>
+            <p className="detail-description">{movie.description}</p>
 
-            <button className="info-btn">+ My List</button>
+            <div className="detail-action-buttons">
+              <button 
+                className="play-btn"
+                onClick={() => handleTrailerPlay(movie)}
+                disabled={!trailerUrl}
+                style={{ opacity: trailerUrl ? 1 : 0.6 }}
+              >
+                ▶ Play Trailer
+              </button>
+
+              <button className="info-btn" onClick={handleToggleList}>
+                {isInList ? "✓ In My List" : "+ Add to List"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 🎬 VIDEO OVERLAY */}
-      {showTrailer && trailer && (
-        <div className="video-overlay">
-          <button
-            className="close-btn"
-            onClick={() => setShowTrailer(false)}
-          >
-            ✕
-          </button>
+      {/* 2. SPECIFIC METADATA INFORMATION TABLE */}
+      <section className="detail-info-section" aria-label="Movie Metadata">
+        <div className="info-grid">
+          {directors.length > 0 && (
+            <div className="info-item">
+              <span className="info-label">Director</span>
+              <span className="info-value">{directors.join(", ")}</span>
+            </div>
+          )}
+          
+          {writers.length > 0 && (
+            <div className="info-item">
+              <span className="info-label">Writers</span>
+              <span className="info-value">{writers.join(", ")}</span>
+            </div>
+          )}
 
-          <iframe
-            src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1`}
-            title="Trailer"
-            allow="autoplay"
-            allowFullScreen
-          ></iframe>
+          {movie.genres && movie.genres.length > 0 && (
+            <div className="info-item">
+              <span className="info-label">Genres</span>
+              <span className="info-value">{movie.genres.join(", ")}</span>
+            </div>
+          )}
+
+          {movie.runtime && movie.runtime !== "N/A" && (
+            <div className="info-item">
+              <span className="info-label">Runtime</span>
+              <span className="info-value">{movie.runtime}</span>
+            </div>
+          )}
+
+          {movie.rating && movie.rating !== "N/A" && (
+            <div className="info-item">
+              <span className="info-label">IMDb Rating</span>
+              <span className="info-value">{movie.rating} / 10</span>
+            </div>
+          )}
         </div>
+      </section>
+
+      {/* 3. CAST SECTION */}
+      {cast.length > 0 && (
+        <section className="detail-cast-section" aria-label="Cast Members">
+          <h2>Cast</h2>
+          <div className="cast-list">
+            {cast.map((actor) => (
+              <div key={actor.id} className="cast-card">
+                <div className="cast-img-wrapper">
+                  <img
+                    src={actor.profileUrl || avatarPlaceholder}
+                    alt={actor.name}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = avatarPlaceholder;
+                    }}
+                  />
+                </div>
+                <p className="cast-name">{actor.name}</p>
+                {actor.character && <p className="cast-character">{actor.character}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* 🎭 CAST */}
-      <div className="section">
-        <h2>Cast</h2>
+      {/* 4. SIMILAR RECOMMENDATIONS */}
+      {similar.length > 0 && (
+        <section className="detail-recommendations" aria-label="Similar Titles">
+          <div style={{ padding: "0 50px" }}>
+            <Row
+              title="More Like This"
+              movies={similar}
+              onTrailerPlay={handleTrailerPlay}
+            />
+          </div>
+        </section>
+      )}
 
-        <div className="cast-list">
-          {cast.map((actor) => (
-            <div key={actor.id} className="cast-card">
-              <img
-                src={
-                  actor.profile_path
-                    ? `https://image.tmdb.org/t/p/w200${actor.profile_path}`
-                    : "https://via.placeholder.com/100"
-                }
-                alt={actor.name}
-              />
-              <p>{actor.name}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 🔥 SIMILAR (USING ROW) */}
-      <Row
-        title="More Like This"
-        fetchData={() => fetchSimilarMovies(id)}
+      {/* TRAILER MODAL OVERLAY */}
+      <VideoModal
+        isOpen={showTrailer}
+        videoUrl={trailerUrl}
+        onClose={() => setShowTrailer(false)}
       />
 
-      {/* 🔥 RECOMMENDED (USING ROW) */}
-      <Row
-        title="Recommended For You"
-        fetchData={() => fetchRecommendations(id)}
-      />
+      <Footer />
     </div>
   );
 };
